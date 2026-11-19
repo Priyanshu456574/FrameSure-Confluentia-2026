@@ -1,108 +1,150 @@
-"""Generate the submission brief from current evidence (ReportLab only)."""
+"""Generate an evidence-labelled, judge-readable PDF overview with ReportLab."""
+from __future__ import annotations
+
 import json
 from pathlib import Path
-from xml.sax.saxutils import escape
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image, Flowable
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak
 
 ROOT=Path(__file__).resolve().parent.parent
+OUT=ROOT/'FrameSure_Submission_Brief.pdf'
+DATA=json.loads((ROOT/'evidence'/'full_video_benchmark.json').read_text())
+SUMMARY=json.loads((ROOT/'evidence'/'validation_summary.json').read_text())
+NAVY=colors.HexColor('#102433'); TEAL=colors.HexColor('#00a686'); LIGHT=colors.HexColor('#e8f7f2')
+GREY=colors.HexColor('#5c707b'); RULE=colors.HexColor('#dae4e7')
+import reportlab
+FONT_DIR=Path(reportlab.__file__).resolve().parent/'fonts'
+pdfmetrics.registerFont(TTFont('DejaVu',str(FONT_DIR/'Vera.ttf')))
+pdfmetrics.registerFont(TTFont('DejaVuBold',str(FONT_DIR/'VeraBd.ttf')))
+style={
+ 'title':ParagraphStyle('title',fontName='DejaVuBold',fontSize=22,leading=29,textColor=NAVY,spaceAfter=12),
+ 'subtitle':ParagraphStyle('sub',fontName='DejaVu',fontSize=10,leading=16,textColor=GREY,spaceAfter=12),
+ 'h1':ParagraphStyle('h1',fontName='DejaVuBold',fontSize=12,leading=19,textColor=NAVY,spaceBefore=16,spaceAfter=7),
+ 'body':ParagraphStyle('body',fontName='DejaVu',fontSize=8.7,leading=14,spaceAfter=7),
+ 'small':ParagraphStyle('small',fontName='DejaVu',fontSize=7.4,leading=12,spaceAfter=4),
+ 'table':ParagraphStyle('table',fontName='DejaVu',fontSize=7,leading=11),
+ 'tablehead':ParagraphStyle('tablehead',fontName='DejaVuBold',fontSize=7,leading=11,textColor=colors.white),
+ 'light':ParagraphStyle('light',fontName='DejaVu',fontSize=8.2,leading=13,textColor=GREY),
+}
 
-class Architecture(Flowable):
-    def __init__(self):
-        super().__init__()
-        self.width=475
-        self.height=160
-    def draw(self):
-        c=self.canv
-        boxes=[(0,104,210,'Browser: hash / chunks / retries'),(265,104,210,'HTTP API + durable SQLite / files'),
-               (265,45,210,'Full-file SHA gate, then FFmpeg'),(0,45,210,'JSON: bytes / source / target')]
-        c.setFont('Helvetica',9)
-        for x,y,w,label in boxes:
-            c.setFillColor(colors.HexColor('#edf7f5'));c.setStrokeColor(colors.HexColor('#159883'))
-            c.roundRect(x,y,w,37,5,stroke=1,fill=1)
-            c.setFillColor(colors.HexColor('#183746'));c.drawCentredString(x+w/2,y+15,label)
-        for x1,y1,x2,y2 in [(210,122,265,122),(370,104,370,82),(265,63,210,63)]:
-            c.line(x1,y1,x2,y2)
-        c.setFont('Helvetica-Oblique',8)
-        c.drawString(0,12,'Operational failure: retain verified data; three failed attempts produce FAILED, validity unknown.')
+def P(t,k='body'):return Paragraph(t,style[k])
 
-def main():
-    summary=json.loads((ROOT/'evidence/validation_summary.json').read_text())
-    bench=json.loads((ROOT/'evidence/full_video_benchmark.json').read_text())
-    network=json.loads((ROOT/'evidence/network/controlled_results.json').read_text())
-    styles=getSampleStyleSheet()
-    styles.add(ParagraphStyle(name='Title2',fontName='Helvetica-Bold',fontSize=27,leading=32,textColor=colors.HexColor('#163342'),spaceAfter=15))
-    styles['BodyText'].fontSize=10; styles['BodyText'].leading=15; styles['BodyText'].spaceAfter=9
-    styles['Heading2'].textColor=colors.HexColor('#087f70')
-    def p(text,style='BodyText'): return Paragraph(text,styles[style])
-    def table(rows,widths):
-        t=Table([[p(escape(str(cell))) for cell in row] for row in rows],colWidths=widths,repeatRows=1)
-        t.setStyle(TableStyle([('BACKGROUND',(0,0),(-1,0),colors.HexColor('#e6f2ef')),('VALIGN',(0,0),(-1,-1),'TOP'),
-            ('GRID',(0,0),(-1,-1),.4,colors.HexColor('#cbdad9')),('TOPPADDING',(0,0),(-1,-1),8),('BOTTOMPADDING',(0,0),(-1,-1),7)]))
-        return t
-    story=[p('FRAMESURE 2.0.0','Title2'),p('Verified transfer. Explainable frame integrity.','Heading2'),
-        p('IIT (BHU) Confluentia 2026 technical challenge | Reviewed 19 November 2026'),
-        p('Problem and proposed solution','Heading2'),
-        p('Deliver a 30-second video through changing connectivity, verify intact delivery, then validate decoding and examine frames at a target 30 FPS. FrameSure preserves the existing Python/browser implementation and uses durable indexed chunks, SHA-256 gates, resumable sessions and evidence-qualified frame reports.'),
-        p('Current release evidence','Heading2'),
-        table([['Check','Observed result'],['Python suite',f"{summary['passed']} passed; {summary['skipped']} skipped; {summary['failures']} failures; {summary['errors']} errors"],
-            ['Frontend regressions','Seven frontend behavior checks and JavaScript parsing passed'],
-            ['Video examples','Fresh valid/gap/invalid reports plus actual FFmpeg timeout recovery'],
-            ['HTTP benchmark',f"{bench['trial_count']} real HTTP/TCP trials with actual video decoding"],
-            ['Browser workflow','User-completed session and report observed; automated suite BLOCKED'],
-            ['Hosted CI / GitHub','Configured / prepared; not run or published']], [150,325]),
-        p('Release decision','Heading2'),p('Ready for local technical review. Remaining full browser scenarios, physical-network evidence, authenticated publication and late acceptance prevent unconditional submission certification.'),
-        PageBreak(),p('Architecture and methodology','Title2'),Architecture(),
-        p('Reliable transfer','Heading2'),p('The client hashes the file and sends fixed 256 KiB chunks. The backend validates chunk length and digest, writes and fsyncs an atomic file, commits SQLite metadata and then acknowledges. Retries are idempotent; conflicting replays fail. Finalization orders all pieces and rechecks whole-file bytes before decoding.'),
-        p('Frame evidence','Heading2'),p('FFprobe records source frame timestamps and indices. FFmpeg verifies decoding, fingerprints source frames with passthrough timing, and separately samples fps=30. Timestamp gaps and repeated luma hashes are heuristic warnings. A static scene can resemble repeated frames; a resampled 900-frame output does not establish a complete camera recording.'),
-        p('Improvements in this release','Heading2'),p('Timeouts, missing tools, OS execution errors and signal termination leave a retryable verified upload. A persisted three-attempt budget ends in FAILED with video validity unknown, rather than false corruption rejection. Concurrent finalization reuses completed reports. Client report reset, stale-hash guards and locked file selection protect state; ACK rate and outage labels state their actual meaning.'),
-        p('Storage and platform','Heading2'),p('SQLite upload/chunk rows, per-session POSIX locks, numbered chunk files and an atomically assembled final file. Python standard library plus FFmpeg/FFprobe; macOS/Linux local filesystem. CLI host, port and data directory configuration.'),
-        PageBreak(),p('Executed validation','Title2'),
-        p(f"Python {summary['python']}; {escape(summary['platform'])}. Exact logs and tool versions are included in evidence/. The reviewed baseline and timeout checkpoint were independently rechecked. Current logs and reports are separated from historical baseline evidence."),
-        p('Controlled HTTP benchmark','Heading2')]
-    rows=[['Condition / strategy','Payload bytes','Retries','Seconds']]
-    for r in bench['trials']:
-        rows.append([('Stable' if r['scenario']=='stable' else 'TCP interrupted')+' / '+r['architecture'],r['wire_payload_bytes'],r['retry_count'],r['elapsed_wall_seconds']])
-    story.extend([table(rows,[220,100,65,90]),Spacer(1,12),
-        p('One 1,386,829-byte fixture and one deterministic socket interruption per disrupted trial. The interrupted resumable strategy sent 524,288 fewer payload bytes. Timing includes decode work on localhost; no statistical reliability, real radio strength or universal speed advantage is claimed.'),
-        p('Fresh sample reports','Heading2'),table([['Input','Observed output'],['Valid 30-second fixture','COMPLETED; 900 source frames, 900 target samples; zero heuristic anomalies'],['Synthetic timestamp gap','COMPLETED; 870 source frames, 900 target samples; one gap warning'],['Non-video bytes','REJECTED; matching transfer SHA but invalid video container']], [170,305]),
-        p('Tests cover','Heading2'),p('Checksum and size failures, missing/corrupt pieces, replay/conflict, out-of-order and concurrent writes, restart/retry, HTTP framing, invalid duration/metadata, valid/invalid/truncated video, gap/static-scene evidence, bounded timeout recovery and real concurrent duplicate HTTP finalization. DOM-double tests exercise client state ownership. Real browser upload compatibility remains unproven.'),
-        PageBreak(),p('Observed application','Title2'),p('Genuine observed user-completed session: matching SHA, 100% acknowledged and 900/900 frames. This is user execution and completed-session recovery, not an agent-executed fresh upload or interrupted-refresh proof. Later minor client changes were regression-tested with API doubles.')])
-    screenshot=ROOT/'evidence/browser/selection_verified.jpg'
-    if screenshot.exists():
-        image=Image(str(screenshot)); scale=min(475/image.imageWidth,565/image.imageHeight)
-        image.drawWidth=image.imageWidth*scale;image.drawHeight=image.imageHeight*scale;story.append(image)
-    story.extend([PageBreak(),p('Network and requirement coverage','Title2'),
-        p('Executed controlled impairment','Heading2'),
-        p('An isolated localhost HTTP proxy adds delay, body pacing, a TCP shutdown or an HTTP failure. No host network settings were changed. All profiles verified the complete SHA and decoded 900 frames.')])
-    network_rows=[['Profile','Controlled setting','Retries','Seconds']]
-    for row in network['results']:
-        settings={'stable':'None','latency':'75 ms per PUT','throttled':'524,288 B/s body pacing',
-                  'TCP interruption':'One close after 8,192 bytes','transient request failure':'One HTTP 503'}
-        network_rows.append([row['scenario'],settings[row['scenario']],row['retries'],row['elapsed_seconds']])
-    story.extend([table(network_rows,[130,205,60,80]),Spacer(1,10),
-        p('This is userspace proxy impairment, not kernel packet loss or physical radio measurement. Wi-Fi/mobile handoff and physical signal degradation are NOT TESTED.'),
-        p('Evidence-based requirement coverage','Heading2'),
-        table([['Classification','Grouped obligations','Reason'],
-            ['Fully implemented','10','Byte/processing gates, reports, local tests, documentation and package'],
-            ['Partially implemented','6','Physical network constraints, broad anomaly evidence and full browser matrix'],
-            ['Not implemented','0','No grouped requirement silently omitted']], [130,120,225]),
-        p('Sixteen internally grouped official obligations; not an official competition scoring system. The detailed traceability matrix maps implementation locations to actual tests and remaining gaps.'),
-        p('Browser and security limits','Heading2'),
-        p('Portable Playwright suite: actual launch exit 2, BLOCKED. Normal user completion is observed, while full automated outage, refresh, invalid and timeout cases remain pending. The prototype has no auth, TLS, global disk budget or decoder sandbox; use localhost only.')])
-    story.extend([PageBreak(),p('Demonstrate and submit','Title2'),p('Run and verify','Heading2'),
-        p('Install Python 3.10+ and FFmpeg/FFprobe. From the source folder run scripts.preflight, scripts.validate, then backend.api. Open http://127.0.0.1:8877. See README.md and docs/DEMO_GUIDE.md for exact commands and the 4-minute demonstration script.'),
-        p('Limitations and future scope','Heading2'),p('Real interface switching and physical packet loss, mobile/Safari support, broad VFR/codec evaluation and capture-side ground truth remain pending. This is a loopback prototype without authentication, TLS, global disk quotas or decoder sandboxing. Future priorities are browser recovery evidence, measured network trials and worker isolation.'),
-        p('Submission and publication','Heading2'),p('The official deadline was 15 November 2026 at 11:59 PM IST. Confirm late acceptance with the organizers. The supplied PS has no numeric scoring rubric. No email was sent. GitHub authentication is unavailable; a cleaned local commit and Git bundle are supplied with exact publication commands. Public visibility permission and contributor identity were not assumed. The original PS PDF is excluded from the release.'),
-        p('Conclusion','Heading2'),p('The revised prototype passes its complete local Python suite and real HTTP/video benchmarks. The evidence supports local byte reliability and qualified frame analysis. Remaining browser scenarios, physical-network claims and external submission remain explicitly separate pending work.')])
-    def footer(c,d):
-        c.setFont('Helvetica',8);c.setFillColor(colors.HexColor('#557079'))
-        c.drawString(56,29,'FrameSure 2.0.0 | Audited local prototype | 19 November 2026');c.drawRightString(539,29,str(d.page))
-    out=ROOT/'FrameSure_Submission_Brief.pdf'
-    SimpleDocTemplate(str(out),pagesize=A4,leftMargin=56,rightMargin=56,topMargin=46,bottomMargin=48,
-        title='FrameSure - Reviewed Technical Submission').build(story,onFirstPage=footer,onLaterPages=footer)
-    print(out)
+def tbl(rows,widths=None,header=True):
+ values=[]
+ for i,row in enumerate(rows):
+  values.append([P(str(cell),'tablehead' if header and i==0 else 'table') for cell in row])
+ table=Table(values,colWidths=widths,hAlign='LEFT',repeatRows=1 if header else 0)
+ table.setStyle(TableStyle([
+  ('BACKGROUND',(0,0),(-1,0),NAVY if header else LIGHT),
+  ('ROWBACKGROUNDS',(0,1),(-1,-1),[colors.white,colors.HexColor('#f2f6f6')]),
+  ('BOX',(0,0),(-1,-1),.45,RULE),('LINEBELOW',(0,0),(-1,0),.6,TEAL),
+  ('VALIGN',(0,0),(-1,-1),'TOP'),('LEFTPADDING',(0,0),(-1,-1),9),
+  ('RIGHTPADDING',(0,0),(-1,-1),9),('TOPPADDING',(0,0),(-1,-1),6),
+  ('BOTTOMPADDING',(0,0),(-1,-1),6),
+ ]))
+ return table
 
-if __name__=='__main__': main()
+story=[]
+story.extend([P('FRAMESURE','title'),P('VERIFIED TRANSFER, EXPLAINABLE FRAME INTEGRITY','subtitle'),
+ P('IIT (BHU) Confluentia 2026  |  Nihilent / nSEPIA Technical Challenge','body'),
+ P('<b>Challenge:</b> Send a 30-second video through varying connectivity (20%-100% stated network strength), confirm complete uncorrupted delivery, and diagnose 30-FPS frame integrity without confusing network losses with capture/encoding losses.'),
+ tbl([[str(SUMMARY['passed']),str(DATA['trial_count']),'2','30 FPS'],['automated tests passed','actual local HTTP benchmark trials','integrity layers: bytes + decoded video','analysis target']], [120,120,120,120],header=False),
+ P('Executive decision','h1'),
+ P('The existing zero-third-party-Python-runtime localhost system uses resumable 256-KiB chunks, SQLite-persisted upload state, file fsync/atomic renames, SHA-256 verification, and FFprobe/FFmpeg-based analysis. Add bounded retry, adaptive browser concurrency, a clearly labeled network-fault emulator, and source-vs-target frame evidence.'),
+ P('Requirement traceability at a glance','h1'),
+ tbl([['Official obligation','Implemented mechanism','Validation status'],
+ ['End-to-end 30-second video under variable connectivity','256-KiB chunks, resume, retry and emulator','Local proof; physical radio testing pending'],
+ ['Never silently accept partial/damaged transfer','Chunk size/hash + full size/SHA verification before decode','Tested; corrupt/partial rejected'],
+ ['Validate and decode video','ffprobe + FFmpeg full decode, error reporting','Tested with valid/invalid clips'],
+ ['30-FPS frames; identify anomalies and positions','Source PTS + FFmpeg fps=30 target; timestamp and visual warnings','Synthetic gap localized at ~11s'],
+ ['Implementation, docs, tests, sample report','Code ZIP, README, logs, JSON, demo guide','Included in package']], [141,194,145]),
+ P('See <b>docs/REQUIREMENT_TRACEABILITY.md</b> for the full PDF-to-code-to-test matrix. No official numeric judging rubric exists in the supplied challenge.','small'),
+ P('Why a single HTTP request fails','h1'),
+ P('TCP retransmits packet loss while its connection remains viable, but a broken HTTP body usually loses application-level progress. A 95%-complete conventional upload often must restart. Retries also risk duplicate/conflicting data unless they are idempotent. A final received byte is not equivalent to fsynced storage, verified file content, or correct source video.')
+])
+story.append(PageBreak())
+story.extend([
+ P('Engineering architecture and recovery','title'),
+ tbl([['Step','Safety property','What the reviewer can verify'],
+ ['Session allocation','UUID + declared file length/hash, bounded size','GET session status'],
+ ['Chunk acceptance','SHA-256, exact offset-length, atomic fsync+rename','Corrupt chunk gets HTTP 422'],
+ ['Duplicate/out-of-order','Same content idempotent; conflict HTTP 409','Repeat request; reorder chunks'],
+ ['Reconnect and refresh','SQLite source of truth; same-file SHA check','Restart server or reselect file'],
+ ['Finalization','Rehash stored parts; exact file SHA before decoder','No false completion with missing data'],
+ ['Video processing','Container, full decode, source timestamps','Valid 30s MP4 produces source frames'],
+ ['Evidence report','30-FPS target sampled separately and labeled','JSON with timestamps, source/target arrays']], [123,183,174]),
+ P('Runtime model','h1'),
+ P('<b>Browser  >  HTTP API  >  SQLite + POSIX chunks  >  whole-file SHA-256 gate  >  FFprobe / FFmpeg  >  JSON integrity report.</b> Per-session POSIX locks serialize finalization. A processing timeout retains verified data in VERIFYING for retry. After three unsuccessful attempts, FAILED records unknown video validity. Invalid video is REJECTED; successful processing is COMPLETED.'),
+ P('Scientifically defensible frame detection','h1'),
+ P('<b>Cryptographic byte integrity:</b> SHA-256 confirms equality with the sender-provided byte sequence; it does not attest what the camera actually captured. <b>Video validity:</b> FFprobe and FFmpeg verify container and decodability. <b>Source evidence:</b> best-effort source timestamps, gaps/non-monotonicity and suspiciously repeated low-resolution luma hashes are labeled heuristic, not certain. <b>Output sampling:</b> `fps=30` creates a separate timeline and may duplicate or omit frames.'),
+ tbl([['Source video','Source frames','30-FPS samples','Interpretation'],
+ ['Valid testsrc2, 30 sec','900','900','No heuristic anomalies found'],
+ ['Synthetic 1.0s timestamp gap','870','900','Gap near 11s; heuristic, not proof of capture loss'],
+ ['Legitimate static scene','900','900','Repeated visual-content warning, not verified loss'],
+ ['Not a video container','-','-','SHA can match, but video is REJECTED']], [157,95,100,122]),
+])
+story.append(PageBreak())
+story.extend([
+ P('Executed evidence and engineering audit','title'),
+ P('Local tests used Python 3.11.9 and FFmpeg/FFprobe 7.0. The recorded results are measured. A fresh ZIP extraction also passed the complete Python suite; the original release is preserved.','body'),
+ tbl([['Validation','Observed result'],
+ ['Automated unittest suite',f"{SUMMARY['passed']} passed, {SUMMARY['skipped']} skipped, {SUMMARY['failures']} failures, {SUMMARY['errors']} errors"],
+ ['Frontend checks','Seven behavior checks and JavaScript parsing passed'],
+ ['Stable HTTP transfer','Both architectures verified the 1,386,829-byte 30-second video'],
+ ['Injected TCP disconnect','Both recovered and delivered verified bytes'],
+ ['Browser evidence','User completion/report observed; full automated suite BLOCKED']], [179,301]),
+ P('One controlled interrupted HTTP upload','h1'),
+ tbl([['Metric','Single request','FrameSure resumable'],
+ ['Payload bytes sent','2,091,341','1,567,053'],
+ ['Payload overhead','50.8%','13.0%'],
+ ['Retries','1','1'],
+ ['File hash matched','Yes','Yes'],
+ ['Source video frames','900','900']], [165,157,158]),
+ P('<b>Interpretation:</b> in this exact one-interruption test, FrameSure avoided 524,288 bytes of unnecessary retransmission. Stable transfers were equal at 1,386,829 payload bytes. This one-seed loopback benchmark is not statistical evidence of reliability under physical packet loss or real 20%-to-100% radio strength.'),
+ P('Independent reliability review','h1'),
+ P('Covered: malformed hashes, conflicting replay, partial/out-of-order chunks, concurrent requests, duplicate finalization, stored-byte corruption, restart, invalid/truncated video and source-gap evidence. Five isolated proxy profiles and an actual FFmpeg timeout/retry passed. Retries are persisted and bounded. Acknowledgment follows filesystem sync and database commit.'),
+ P('Limitations to disclose','h1'),
+ P('Physical Wi-Fi/mobile switching and IP packet loss, mobile/Safari support, broad codec/VFR coverage and load testing remain unverified. Proxy shaping is not physical network testing. Full browser outage/refresh/invalid/timeout tests are blocked. The localhost prototype lacks login, TLS and a decoder sandbox; capture-time loss needs independent evidence.'),
+])
+story.append(PageBreak())
+story.extend([
+ P('Run, demonstrate and submit','title'),
+ P('1. Run the prototype','h1'),
+ P('Install Python 3.10+ and FFmpeg/FFprobe, open a terminal in the extracted ZIP root, and run:'),
+ P('`python3 -m backend.api --host 127.0.0.1 --port 8877 --data-dir runtime-data`'),
+ P('Then visit <b>http://127.0.0.1:8877</b> and select <b>samples/valid_30s_30fps.mp4</b>.'),
+ P('2. Reproduce the verification','h1'),
+ P('`python3 -m unittest discover -s tests -v`'),
+ P('`python3 -m scripts.benchmark --out evidence/full_video_benchmark.json`'),
+ P('Review source reports in <b>evidence/</b>, full API and failure semantics in <b>docs/ARCHITECTURE.md</b>, and the 4-minute narration in <b>docs/BROWSER_DEMO_SCRIPT.md</b>.'),
+ P('3. Demo sequence','h1'),
+ P('Show valid 30-second upload; change synthetic strength; press "Emulate 5s outage"; let the client recover; show matching SHA; inspect source and target frames; upload a truncated invalid MP4 and show explicit rejection; finish with measured baseline comparison and clear limits.'),
+ P('4. Submission package','h1'),
+ P('Includes backend code, frontend HTML/JS/CSS, tests, five reproducible sample videos, the benchmark runner, integrity JSON reports, architecture and requirement matrix, security review, demo script, unofficial judge review and a prepared email draft.'),
+ P('Public source repository','h1'),
+ P('<link href="https://github.com/Priyanshu456574/FrameSure-Confluentia-2026">github.com/Priyanshu456574/FrameSure-Confluentia-2026</link>'),
+ P('Official submission details (from challenge PDF page 3)','h1'),
+ tbl([['Submission destination','iitbhu_2026@nihilent.com'],
+ ['Deadline','15 November 2026, 11:59 PM IST'],
+ ['Suggested subject','Confluentia 2026 | Technical Challenge | [Your Name / Team]'],
+ ['Send','Repository/ZIP, concise documentation, test evidence, sample integrity report']], [169,311],header=False),
+ P('Release declaration','h1'),
+ P('This is a <b>working, locally tested prototype</b>. The stated deadline has elapsed; late acceptance is unknown and no email was sent. Browser and physical-network limits remain disclosed. No real-radio reliability rate or definitive camera frame-loss claim is made.'),
+ P('Document generated from the packaged source, executed tests and measured benchmark; no invented benchmark outcomes.','small')
+])
+
+def footer(canvas,doc):
+ canvas.setStrokeColor(RULE);canvas.line(19*mm,16*mm,191*mm,16*mm)
+ canvas.setFont('DejaVu',7);canvas.setFillColor(GREY)
+ canvas.drawString(19*mm,11*mm,'FrameSure | Confluentia 2026 | Evidence-constrained engineering submission')
+ canvas.drawRightString(191*mm,11*mm,f'Page {doc.page}')
+
+SimpleDocTemplate(str(OUT),pagesize=A4,leftMargin=19*mm,rightMargin=19*mm,
+                  topMargin=18*mm,bottomMargin=22*mm,title='FrameSure | Submission Brief').build(story,onFirstPage=footer,onLaterPages=footer)
+print(OUT,OUT.stat().st_size)
