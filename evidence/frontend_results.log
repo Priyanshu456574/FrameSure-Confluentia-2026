@@ -1,0 +1,8 @@
+PASS: upload locks file selection
+PASS: running upload ignores file-selection event
+PASS: selection clears stale report and verification
+PASS: stale asynchronous hash cannot replace current selection
+PASS: HTTP 503 leaves retryable UI without a false report
+PASS: retry renders completion, frame counts and durable progress
+PASS: emulator delay, request-failure branches and outage gate
+PASS: frontend JavaScript parsed

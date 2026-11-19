@@ -1,0 +1,14 @@
+{
+  "date_utc": "2026-11-19T12:03:04.609757+00:00",
+  "python": "3.11.9",
+  "platform": "macOS-26.5.1-arm64-arm-64bit",
+  "tests_discovered": 46,
+  "passed": 46,
+  "skipped": 0,
+  "failures": 0,
+  "errors": 0,
+  "elapsed_seconds": 6.256,
+  "ffmpeg_available": true,
+  "ffprobe_available": true,
+  "skip_reasons": []
+}

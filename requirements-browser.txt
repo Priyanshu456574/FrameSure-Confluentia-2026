@@ -1,0 +1,2 @@
+# Optional, only for real browser end-to-end tests
+playwright==1.65.2

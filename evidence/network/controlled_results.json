@@ -1,0 +1,77 @@
+{
+  "category": "controlled userspace TCP/HTTP proxy impairment on loopback",
+  "host_network_configuration_changed": false,
+  "physical_network_tested": false,
+  "packet_loss_tested": false,
+  "video_decoder": "real FFmpeg",
+  "results": [
+    {
+      "scenario": "stable",
+      "parameters": {},
+      "status": "PASSED",
+      "retries": 0,
+      "elapsed_seconds": 0.323,
+      "sha256_match": true,
+      "source_frames": 900,
+      "submitted_chunk_payload_bytes": 1386829,
+      "injection_triggered": false
+    },
+    {
+      "scenario": "latency",
+      "parameters": {
+        "latency_seconds": 0.075
+      },
+      "status": "PASSED",
+      "retries": 0,
+      "elapsed_seconds": 0.765,
+      "sha256_match": true,
+      "source_frames": 900,
+      "submitted_chunk_payload_bytes": 1386829,
+      "injection_triggered": false
+    },
+    {
+      "scenario": "throttled",
+      "parameters": {
+        "bytes_per_second": 524288
+      },
+      "status": "PASSED",
+      "retries": 0,
+      "elapsed_seconds": 3.217,
+      "sha256_match": true,
+      "source_frames": 900,
+      "submitted_chunk_payload_bytes": 1386829,
+      "injection_triggered": false
+    },
+    {
+      "scenario": "TCP interruption",
+      "parameters": {
+        "disconnect_once": true
+      },
+      "status": "PASSED",
+      "retries": 1,
+      "elapsed_seconds": 0.225,
+      "sha256_match": true,
+      "source_frames": 900,
+      "submitted_chunk_payload_bytes": 1648973,
+      "injection_triggered": true
+    },
+    {
+      "scenario": "transient request failure",
+      "parameters": {
+        "http503_once": true
+      },
+      "status": "PASSED",
+      "retries": 1,
+      "elapsed_seconds": 0.234,
+      "sha256_match": true,
+      "source_frames": 900,
+      "submitted_chunk_payload_bytes": 1648973,
+      "injection_triggered": true
+    }
+  ],
+  "limitations": [
+    "HTTP failure and TCP connection close are not IP packet loss.",
+    "Rate limiting and latency are proxy scheduling; not a kernel network emulator.",
+    "No physical Wi-Fi/mobile switching or physical signal percentage was measured."
+  ]
+}

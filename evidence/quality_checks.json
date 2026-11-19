@@ -1,0 +1,12 @@
+{
+  "workflow_syntax": "PASSED",
+  "configured_jobs": [
+    "test",
+    "browser"
+  ],
+  "hosted_workflow_executed": false,
+  "known_credential_pattern_hits": [],
+  "machine_specific_source_path_hits": [],
+  "dependency_cve_scan": "NOT TESTED",
+  "scope": "Source snapshot; prior Git history preserved and not cleared for public redistribution"
+}

@@ -1,0 +1,2 @@
+# FrameSure Python backend intentionally uses the standard library only.
+# No pip packages are required; external executables ffmpeg and ffprobe are required.

@@ -1,0 +1,41 @@
+test_ambiguous_lengths_rejected (test_regressions.HTTPFramingTests.test_ambiguous_lengths_rejected) ... ok
+test_transfer_encoding_rejected (test_regressions.HTTPFramingTests.test_transfer_encoding_rejected) ... ok
+test_unread_body_does_not_become_second_request (test_regressions.HTTPFramingTests.test_unread_body_does_not_become_second_request) ... ok
+test_cleanup_preserves_lock_inode (test_regressions.RecoveryTests.test_cleanup_preserves_lock_inode) ... ok
+test_missing_decoder_retains_upload_for_retry (test_regressions.RecoveryTests.test_missing_decoder_retains_upload_for_retry) ... ok
+test_missing_executable_is_operational_failure (test_regressions.RecoveryTests.test_missing_executable_is_operational_failure) ... ok
+test_invalid_metadata_is_explicit_validation_error (test_regressions.VideoMetadataTests.test_invalid_metadata_is_explicit_validation_error) ... ok
+test_video_track_duration_overrides_audio_container_duration (test_regressions.VideoMetadataTests.test_video_track_duration_overrides_audio_container_duration) ... ok
+test_26_legitimate_static_scene_is_not_called_confirmed_loss (test_service.AdditionalVideoAndTransportTests.test_26_legitimate_static_scene_is_not_called_confirmed_loss) ... ok
+test_27_truncated_container_is_not_accepted (test_service.AdditionalVideoAndTransportTests.test_27_truncated_container_is_not_accepted) ... ok
+test_28_http_short_request_never_acknowledged (test_service.AdditionalVideoAndTransportTests.test_28_http_short_request_never_acknowledged) ... ok
+test_15_valid_30sec_source_and_target (test_service.EndToEndVideoTests.test_15_valid_30sec_source_and_target) ... ok
+test_16_synthetic_gap_detected_without_false_certainty (test_service.EndToEndVideoTests.test_16_synthetic_gap_detected_without_false_certainty) ... ok
+test_17_invalid_container_rejected (test_service.EndToEndVideoTests.test_17_invalid_container_rejected) ... ok
+test_18_real_upload_video_validation (test_service.EndToEndVideoTests.test_18_real_upload_video_validation) ... ok
+test_19_invalid_video_with_valid_sha_rejected (test_service.EndToEndVideoTests.test_19_invalid_video_with_valid_sha_rejected) ... ok
+test_20_http_protocol_and_chunks (test_service.HTTPTests.test_20_http_protocol_and_chunks) ... ok
+test_21_deny_path_traversal_and_oversize (test_service.HTTPTests.test_21_deny_path_traversal_and_oversize) ... ok
+test_22_30_second_duration_enforced (test_service.MoreTests.test_22_30_second_duration_enforced) ... ok
+test_23_invalid_video_report_separates_transfer_and_decode (test_service.MoreTests.test_23_invalid_video_report_separates_transfer_and_decode) ... ok
+test_24_simultaneous_finalize_no_false_success (test_service.MoreTests.test_24_simultaneous_finalize_no_false_success) ... ok
+test_25_cross_process_service_recovery_is_real_persistence (test_service.MoreTests.test_25_cross_process_service_recovery_is_real_persistence) ... ok
+test_01_initial_state (test_service.ServiceTests.test_01_initial_state) ... ok
+test_02_out_of_order_chunks_valid (test_service.ServiceTests.test_02_out_of_order_chunks_valid) ... ok
+test_03_same_chunk_replay_is_idempotent (test_service.ServiceTests.test_03_same_chunk_replay_is_idempotent) ... ok
+test_04_conflicting_replay_rejected (test_service.ServiceTests.test_04_conflicting_replay_rejected) ... ok
+test_05_bad_chunk_checksum_rejected (test_service.ServiceTests.test_05_bad_chunk_checksum_rejected) ... ok
+test_06_partial_upload_cannot_finalize (test_service.ServiceTests.test_06_partial_upload_cannot_finalize) ... ok
+test_07_wrong_part_length_rejected (test_service.ServiceTests.test_07_wrong_part_length_rejected) ... ok
+test_08_restart_preserves_chunks (test_service.ServiceTests.test_08_restart_preserves_chunks) ... ok
+test_09_corruption_on_disk_rejected_before_decode (test_service.ServiceTests.test_09_corruption_on_disk_rejected_before_decode) ... ok
+test_10_mismatched_file_digest_rejected (test_service.ServiceTests.test_10_mismatched_file_digest_rejected) ... ok
+test_11_concurrent_duplicate_uploads (test_service.ServiceTests.test_11_concurrent_duplicate_uploads) ... ok
+test_12_pause_resume (test_service.ServiceTests.test_12_pause_resume) ... ok
+test_13_verify_state_crash_recovery (test_service.ServiceTests.test_13_verify_state_crash_recovery) ... ok
+test_14_invalid_session_and_bounds (test_service.ServiceTests.test_14_invalid_session_and_bounds) ... ok
+
+----------------------------------------------------------------------
+Ran 36 tests in 4.270s
+
+OK

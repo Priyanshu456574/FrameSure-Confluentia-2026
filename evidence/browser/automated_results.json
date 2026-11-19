@@ -1,0 +1,12 @@
+{
+  "status": "BLOCKED",
+  "exit_status": 2,
+  "reason": "Chromium launch failed; see launch_error.log",
+  "scenarios": {
+    "A_normal_and_download": "BLOCKED",
+    "B_outage_recovery": "BLOCKED",
+    "C_refresh_reselection": "BLOCKED",
+    "D_invalid_video": "BLOCKED",
+    "E_timeout_and_retry": "BLOCKED"
+  }
+}

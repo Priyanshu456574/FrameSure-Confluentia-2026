@@ -1,0 +1,86 @@
+{
+  "architecture": "single-request",
+  "success": true,
+  "wire_payload_bytes": 1386829,
+  "retry_count": 0,
+  "recovery_events": 0,
+  "sha256_match": true,
+  "source_frames": 900,
+  "scenario": "stable",
+  "elapsed_wall_seconds": 0.289,
+  "source_bytes": 1386829,
+  "payload_overhead_pct": 0.0,
+  "signal_percent_pattern": [
+    100,
+    80,
+    45,
+    20,
+    65,
+    95
+  ]
+}
+{
+  "architecture": "resumable-chunks",
+  "success": true,
+  "wire_payload_bytes": 1386829,
+  "retry_count": 0,
+  "recovery_events": 0,
+  "sha256_match": true,
+  "source_frames": 900,
+  "scenario": "stable",
+  "elapsed_wall_seconds": 0.245,
+  "source_bytes": 1386829,
+  "payload_overhead_pct": 0.0,
+  "signal_percent_pattern": [
+    100,
+    80,
+    45,
+    20,
+    65,
+    95
+  ]
+}
+{
+  "architecture": "single-request",
+  "success": true,
+  "wire_payload_bytes": 2091341,
+  "retry_count": 1,
+  "recovery_events": 1,
+  "sha256_match": true,
+  "source_frames": 900,
+  "scenario": "injected_tcp_disconnect_at_~50pct",
+  "elapsed_wall_seconds": 0.238,
+  "source_bytes": 1386829,
+  "payload_overhead_pct": 50.8,
+  "signal_percent_pattern": [
+    100,
+    80,
+    45,
+    20,
+    65,
+    95
+  ]
+}
+{
+  "architecture": "resumable-chunks",
+  "success": true,
+  "wire_payload_bytes": 1567053,
+  "retry_count": 1,
+  "recovery_events": 1,
+  "sha256_match": true,
+  "source_frames": 900,
+  "scenario": "injected_tcp_disconnect_at_~50pct",
+  "elapsed_wall_seconds": 0.248,
+  "source_bytes": 1386829,
+  "payload_overhead_pct": 13.0,
+  "signal_percent_pattern": [
+    100,
+    80,
+    45,
+    20,
+    65,
+    95
+  ]
+}
+
+Report: evidence/full_video_benchmark.json

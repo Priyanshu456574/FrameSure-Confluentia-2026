@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "upload_id": "5a670d24-3d91-4615-84e3-30d7a5568a68",
+  "outcome": "REJECTED",
+  "transfer": {
+    "complete": true,
+    "client_sha256": "7a100a64d33e2d21ae4c5fd1f03c8aaf4b4c089fedd7b279b9ea435bab4c8351",
+    "server_sha256": "7a100a64d33e2d21ae4c5fd1f03c8aaf4b4c089fedd7b279b9ea435bab4c8351",
+    "sha256_match": true
+  },
+  "processing": {
+    "video_valid": false,
+    "error": "Container parsing failed: /private/var/folders/nm/_jkgcm4j65x5g3yc2wlftyhw0000gn/T/tmpiswj19t7/final/5a670d24-3d91-4615-84e3-30d7a5568a68.video: Invalid data found when processing input\n"
+  },
+  "error": "Container parsing failed: /private/var/folders/nm/_jkgcm4j65x5g3yc2wlftyhw0000gn/T/tmpiswj19t7/final/5a670d24-3d91-4615-84e3-30d7a5568a68.video: Invalid data found when processing input\n",
+  "generated_at_unix": 1795089849.059646
+}
